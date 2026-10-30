@@ -452,3 +452,6 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# The Explorer's Journal - saved adventure data
+final/FinalProject/explorer_data.json

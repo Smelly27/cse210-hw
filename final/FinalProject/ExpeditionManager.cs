@@ -1,5 +1,8 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 
 public class ExpeditionManager
 {
@@ -84,13 +87,168 @@ public class ExpeditionManager
         _researchDatabase.SearchArtifact(name);
     }
 
-    public void SaveData()
+    public void SaveData(Explorer? explorer)
     {
-        Console.WriteLine("The save system is under development.");
+        try
+        {
+            List<ExpeditionSaveData> expeditionData =
+                new List<ExpeditionSaveData>();
+
+            foreach (Expedition expedition in _expeditions)
+            {
+                expeditionData.Add(new ExpeditionSaveData
+                {
+                    Name = expedition.GetName(),
+                    Destination = expedition.GetDestination(),
+                    Purpose = expedition.GetPurpose(),
+                    IsCompleted = expedition.IsCompleted()
+                });
+            }
+
+            List<JournalSaveData> journalData =
+                new List<JournalSaveData>();
+
+            foreach (JournalEntry entry in _journalEntries)
+            {
+                journalData.Add(new JournalSaveData
+                {
+                    Title = entry.GetTitle(),
+                    Date = entry.GetDate(),
+                    Location = entry.GetLocation(),
+                    Content = entry.GetContent(),
+                    ExpeditionName = entry.GetExpeditionName()
+                });
+            }
+
+            ExplorerSaveFile saveFile = new ExplorerSaveFile
+            {
+                ExplorerName = explorer?.GetName() ?? "",
+                ExplorerSpecialty = explorer?.GetSpecialty() ?? "",
+                ExplorerExperienceLevel = explorer?.GetExperienceLevel() ?? 1,
+                Expeditions = expeditionData,
+                JournalEntries = journalData
+            };
+
+            string json = JsonSerializer.Serialize(
+                saveFile,
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                }
+            );
+
+            File.WriteAllText("explorer_data.json", json);
+
+            Console.WriteLine("Explorer data saved successfully!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unable to save explorer data: {ex.Message}");
+        }
     }
 
-    public void LoadData()
+    public Explorer? LoadData()
     {
-        Console.WriteLine("The load system is under development.");
+        if (!File.Exists("explorer_data.json"))
+        {
+            Console.WriteLine("No saved explorer data was found.");
+            return null;
+        }
+
+        try
+        {
+            string json = File.ReadAllText("explorer_data.json");
+
+            ExplorerSaveFile? saveFile =
+                JsonSerializer.Deserialize<ExplorerSaveFile>(json);
+
+            if (saveFile == null)
+            {
+                Console.WriteLine("Unable to load explorer data.");
+                return null;
+            }
+
+            List<Expedition> loadedExpeditions = new List<Expedition>();
+            List<JournalEntry> loadedJournalEntries = new List<JournalEntry>();
+
+            foreach (ExpeditionSaveData data in saveFile.Expeditions)
+            {
+                Expedition expedition = new Expedition(
+                    data.Name,
+                    data.Destination,
+                    data.Purpose
+                );
+
+                if (data.IsCompleted)
+                {
+                    expedition.CompleteExpedition();
+                }
+
+                loadedExpeditions.Add(expedition);
+            }
+
+            foreach (JournalSaveData data in saveFile.JournalEntries)
+            {
+                JournalEntry entry = new JournalEntry(
+                    data.Title,
+                    data.Date,
+                    data.Location,
+                    data.Content,
+                    data.ExpeditionName
+                );
+
+                loadedJournalEntries.Add(entry);
+            }
+
+            Explorer? loadedExplorer = null;
+
+            if (!string.IsNullOrWhiteSpace(saveFile.ExplorerName))
+            {
+                loadedExplorer = new Explorer(
+                    saveFile.ExplorerName,
+                    saveFile.ExplorerSpecialty,
+                    saveFile.ExplorerExperienceLevel
+                );
+            }
+
+            _expeditions = loadedExpeditions;
+            _journalEntries = loadedJournalEntries;
+
+            Console.WriteLine("Explorer data loaded successfully!");
+
+            return loadedExplorer;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unable to load explorer data: {ex.Message}");
+            return null;
+        }
     }
+}
+
+public class ExplorerSaveFile
+{
+    public string ExplorerName { get; set; } = "";
+    public string ExplorerSpecialty { get; set; } = "";
+    public int ExplorerExperienceLevel { get; set; } = 1;
+
+    public List<ExpeditionSaveData> Expeditions { get; set; } = new();
+    public List<JournalSaveData> JournalEntries { get; set; } = new();
+}
+
+public class ExpeditionSaveData
+{
+    public string Name { get; set; } = "";
+    public string Destination { get; set; } = "";
+    public string Purpose { get; set; } = "";
+    public bool IsCompleted { get; set; }
+}
+
+public class JournalSaveData
+{
+    public string Title { get; set; } = "";
+    public string Date { get; set; } = "";
+    public string Location { get; set; } = "";
+    public string Content { get; set; } = "";
+    public string ExpeditionName { get; set; } = "";
 }

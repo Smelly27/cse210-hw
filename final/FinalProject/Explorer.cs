@@ -6,11 +6,20 @@ public class Explorer
     private string _specialty;
     private int _experienceLevel;
 
+    // Constructor for creating a new explorer
     public Explorer(string name, string specialty)
     {
         _name = name;
         _specialty = specialty;
         _experienceLevel = 1;
+    }
+
+    // Constructor for restoring a saved explorer
+    public Explorer(string name, string specialty, int experienceLevel)
+    {
+        _name = name;
+        _specialty = specialty;
+        _experienceLevel = Math.Max(1, experienceLevel);
     }
 
     public string GetName()

@@ -37,7 +37,8 @@ class Program
             Console.WriteLine("5. Research Artifacts");
             Console.WriteLine("6. Open Explorer's Journal");
             Console.WriteLine("7. Save Explorer Data");
-            Console.WriteLine("8. Exit");
+            Console.WriteLine("8. Load Explorer Data");
+            Console.WriteLine("9. Exit");
             Console.WriteLine();
             Console.Write("Select an option: ");
 
@@ -256,10 +257,32 @@ class Program
                     Console.WriteLine("========================================");
                     Console.WriteLine();
 
-                    manager.SaveData();
+                    manager.SaveData(currentExplorer);
                     break;
 
                 case "8":
+                    Console.WriteLine("========================================");
+                    Console.WriteLine("          LOAD EXPLORER DATA");
+                    Console.WriteLine("========================================");
+                    Console.WriteLine();
+
+                    if (System.IO.File.Exists("explorer_data.json"))
+                    {
+                        currentExplorer = manager.LoadData();
+
+                        if (currentExplorer != null)
+                        {
+                            Console.WriteLine();
+                            currentExplorer.DisplayProfile();
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("No saved explorer data was found.");
+                    }
+                    break;
+
+                case "9":
                     Console.WriteLine("Until our next adventure, Explorer!");
                     running = false;
                     break;
